@@ -19,6 +19,9 @@ class PostApprovalInboxScreen extends StatefulWidget {
 }
 
 class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
+  bool _isCalendarView = false;
+  DateTime _selectedCalendarDay = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
   @override
   void initState() {
     super.initState();
@@ -300,99 +303,132 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text('HUMAN-IN-THE-LOOP COMMAND CENTER', style: AppTextStyles.labelCaption),
-              const SizedBox(height: 4),
-              Text('Approval Inbox.', style: AppTextStyles.displayTitle),
+              // Header Row with View Switcher
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('HUMAN-IN-THE-LOOP COMMAND CENTER', style: AppTextStyles.labelCaption),
+                      const SizedBox(height: 4),
+                      Text(
+                        _isCalendarView ? 'Content Calendar.' : 'Approval Inbox.',
+                        style: AppTextStyles.displayTitle,
+                      ),
+                    ],
+                  ),
+                  IconButton.filledTonal(
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.surfaceAubergine,
+                      foregroundColor: AppColors.marigold,
+                    ),
+                    icon: Icon(_isCalendarView ? Icons.view_agenda_rounded : Icons.calendar_month_rounded),
+                    tooltip: _isCalendarView ? 'Switch to Feed View' : 'Switch to Calendar View',
+                    onPressed: () {
+                      setState(() => _isCalendarView = !_isCalendarView);
+                      if (_isCalendarView) {
+                        postProvider.fetchPosts(brand.id, status: 'ALL');
+                      } else {
+                        postProvider.fetchPosts(brand.id, status: 'PENDING_APPROVAL');
+                      }
+                    },
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 18),
 
-              // Filter Tabs
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip('WAITING REVIEW', 'PENDING_APPROVAL', postProvider, brand.id),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('SCHEDULED', 'SCHEDULED', postProvider, brand.id),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('APPROVED QUEUE', 'APPROVED', postProvider, brand.id),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('PUBLISHED', 'PUBLISHED', postProvider, brand.id),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('ALL POSTS', 'ALL', postProvider, brand.id),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              if (postProvider.isGenerating) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAubergine,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.marigold.withValues(alpha: 0.5)),
-                  ),
+              if (_isCalendarView) ...[
+                _buildCalendarTimelineView(context, postProvider, brand.id),
+              ] else ...[
+                // Filter Tabs
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      const CircularProgressIndicator(color: AppColors.marigold, strokeWidth: 2.5),
-                      const SizedBox(width: 18),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Synthesizing Strategy & Rendering Flux Visual...', style: AppTextStyles.headlineSans),
-                            const SizedBox(height: 2),
-                            Text('Writing platform-native copy + 1024x1024 creative', style: AppTextStyles.labelCaption),
-                          ],
-                        ),
-                      ),
+                      _buildFilterChip('WAITING REVIEW', 'PENDING_APPROVAL', postProvider, brand.id),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('SCHEDULED', 'SCHEDULED', postProvider, brand.id),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('APPROVED QUEUE', 'APPROVED', postProvider, brand.id),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('PUBLISHED', 'PUBLISHED', postProvider, brand.id),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('ALL POSTS', 'ALL', postProvider, brand.id),
                     ],
                   ),
-                ).animate().shimmer(duration: 1500.ms),
-                const SizedBox(height: 20),
-              ],
+                ),
 
-              if (postProvider.isLoading && postProvider.posts.isEmpty) ...[
-                const SizedBox(height: 80),
-                const Center(child: CircularProgressIndicator(color: AppColors.marigold)),
-              ] else if (postProvider.posts.isEmpty) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAubergine,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.borderAubergine),
+                const SizedBox(height: 24),
+
+                if (postProvider.isGenerating) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceAubergine,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.marigold.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircularProgressIndicator(color: AppColors.marigold, strokeWidth: 2.5),
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Synthesizing Strategy & Rendering Flux Visual...', style: AppTextStyles.headlineSans),
+                              const SizedBox(height: 2),
+                              Text('Writing platform-native copy + 1024x1024 creative', style: AppTextStyles.labelCaption),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().shimmer(duration: 1500.ms),
+                  const SizedBox(height: 20),
+                ],
+
+                if (postProvider.isLoading && postProvider.posts.isEmpty) ...[
+                  const SizedBox(height: 80),
+                  const Center(child: CircularProgressIndicator(color: AppColors.marigold)),
+                ] else if (postProvider.posts.isEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceAubergine,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.borderAubergine),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.mark_email_read_outlined, color: AppColors.textTertiary, size: 44),
+                        const SizedBox(height: 14),
+                        Text('Inbox is Clear', style: AppTextStyles.bodyBold),
+                        const SizedBox(height: 6),
+                        Text(
+                          'No posts in this category. Click "Generate Post" below to have your AI Content Lead create a strategic post.',
+                          style: AppTextStyles.labelCaption,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.mark_email_read_outlined, color: AppColors.textTertiary, size: 44),
-                      const SizedBox(height: 14),
-                      Text('Inbox is Clear', style: AppTextStyles.bodyBold),
-                      const SizedBox(height: 6),
-                      Text(
-                        'No posts in this category. Click "Generate Post" below to have your AI Content Lead create a strategic post.',
-                        style: AppTextStyles.labelCaption,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                ] else ...[
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: postProvider.posts.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 22),
+                    itemBuilder: (context, index) {
+                      final post = postProvider.posts[index];
+                      return _buildPostCard(context, post, brand.id);
+                    },
                   ),
-                ),
-              ] else ...[
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: postProvider.posts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 22),
-                  itemBuilder: (context, index) {
-                    final post = postProvider.posts[index];
-                    return _buildPostCard(context, post, brand.id);
-                  },
-                ),
+                ],
               ],
 
               const SizedBox(height: 80),
@@ -411,6 +447,158 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
       selectedColor: AppColors.marigold,
       backgroundColor: AppColors.surfaceAubergine,
       onSelected: (_) => provider.setFilter(statusKey, brandId),
+    );
+  }
+
+  Widget _buildCalendarTimelineView(BuildContext context, PostProvider postProvider, String brandId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final days = List.generate(14, (i) => today.subtract(const Duration(days: 2)).add(Duration(days: i)));
+
+    // Posts matching selected day
+    final dayPosts = postProvider.posts.where((p) {
+      final targetDate = p.scheduledFor ?? p.publishedAt ?? p.createdAt;
+      return targetDate.year == _selectedCalendarDay.year &&
+          targetDate.month == _selectedCalendarDay.month &&
+          targetDate.day == _selectedCalendarDay.day;
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 14-day horizontal strip
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: days.map((day) {
+              final isSelected = day.year == _selectedCalendarDay.year &&
+                  day.month == _selectedCalendarDay.month &&
+                  day.day == _selectedCalendarDay.day;
+              final isToday = day.year == today.year && day.month == today.month && day.day == today.day;
+
+              // Count posts for this day
+              final count = postProvider.posts.where((p) {
+                final targetDate = p.scheduledFor ?? p.publishedAt ?? p.createdAt;
+                return targetDate.year == day.year &&
+                    targetDate.month == day.month &&
+                    targetDate.day == day.day;
+              }).length;
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedCalendarDay = day),
+                  child: Container(
+                    width: 68,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.marigold : AppColors.surfaceAubergine,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.marigold
+                            : (isToday ? AppColors.marigold.withValues(alpha: 0.5) : AppColors.borderAubergine),
+                        width: isToday ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          DateFormat('EEE').format(day).toUpperCase(),
+                          style: AppTextStyles.labelCaption.copyWith(
+                            color: isSelected ? AppColors.textOnMarigold : AppColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${day.day}',
+                          style: AppTextStyles.displaySub.copyWith(
+                            color: isSelected ? AppColors.textOnMarigold : AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (count > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.darkCanvas : AppColors.marigold,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: AppTextStyles.badgeText.copyWith(
+                                color: isSelected ? AppColors.marigold : AppColors.textOnMarigold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          )
+                        else
+                          const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Selected Day Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              DateFormat('EEEE, MMMM d').format(_selectedCalendarDay).toUpperCase(),
+              style: AppTextStyles.labelCaption.copyWith(letterSpacing: 1.5),
+            ),
+            Text(
+              '${dayPosts.length} POSTS',
+              style: AppTextStyles.labelCaption.copyWith(color: AppColors.marigold),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 14),
+
+        if (dayPosts.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAubergine,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.borderAubergine),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.event_available_rounded, color: AppColors.textTertiary, size: 40),
+                const SizedBox(height: 12),
+                Text('No Posts Scheduled for this Day', style: AppTextStyles.bodyBold),
+                const SizedBox(height: 6),
+                Text(
+                  'Your audience expects consistency. Click below to generate or schedule a post.',
+                  style: AppTextStyles.labelCaption,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                GlowingButton(
+                  text: 'Generate Post for This Day',
+                  onPressed: () => _showGenerateModal(context, brandId),
+                  icon: Icons.add_circle_outline_rounded,
+                ),
+              ],
+            ),
+          )
+        else
+          ...dayPosts.map((p) => Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: _buildPostCard(context, p, brandId),
+              )),
+      ],
     );
   }
 

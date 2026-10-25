@@ -144,6 +144,46 @@ class _BrandSetupScreenState extends State<BrandSetupScreen> {
 
             const SizedBox(height: 20),
 
+            // Voice Presets
+            Text('QUICK FOUNDER PERSONA PRESETS', style: AppTextStyles.labelCaption),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildPresetChip(
+                    label: '⚡ Silicon Valley Founder',
+                    tone: 'Authoritative, vision-led, data-backed, high conviction, zero fluff',
+                    pillars: 'Market Deconstructions, Product Velocity, Scaling Lessons',
+                    banned: 'cheap, game-changer, synergy, revolutionary',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildPresetChip(
+                    label: '🛠 Tech Architect',
+                    tone: 'Analytical, engineering-first, systems architecture rigor, trade-off analysis',
+                    pillars: 'Architecture Breakdowns, Latency & Scale, Code Patterns',
+                    banned: 'magic, easy, turnkey, foolproof',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildPresetChip(
+                    label: '👑 Luxury Editorial',
+                    tone: 'Bespoke, refined, minimal, evocative, quiet luxury, understated confidence',
+                    pillars: 'Craftsmanship, Design Philosophy, Material Excellence',
+                    banned: 'bargain, discount, buy now, promo',
+                  ),
+                  const SizedBox(width: 8),
+                  _buildPresetChip(
+                    label: '📈 Growth & CRO Lead',
+                    tone: 'High-hook, direct, tactical, frameworks, conversion-driven, checklist format',
+                    pillars: 'A/B Test Teardowns, Growth Experiments, Funnel Analytics',
+                    banned: 'hope, maybe, eventually',
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
             // Tone of voice
             Text('BRAND TONE & VOICE SPECTRUM', style: AppTextStyles.labelCaption),
             const SizedBox(height: 8),
@@ -203,6 +243,33 @@ class _BrandSetupScreenState extends State<BrandSetupScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPresetChip({
+    required String label,
+    required String tone,
+    required String pillars,
+    required String banned,
+  }) {
+    return ActionChip(
+      label: Text(label, style: AppTextStyles.badgeText.copyWith(color: AppColors.iceSilver)),
+      backgroundColor: AppColors.surfaceAubergine,
+      side: const BorderSide(color: AppColors.borderAubergine),
+      onPressed: () {
+        setState(() {
+          _toneController.text = tone;
+          _pillarsController.text = pillars;
+          _bannedWordsController.text = banned;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Applied "$label" persona settings!'),
+            duration: const Duration(seconds: 1),
+            backgroundColor: AppColors.deepAubergine,
+          ),
+        );
+      },
     );
   }
 }
