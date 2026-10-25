@@ -14,6 +14,7 @@ from app.schemas.post import (
     PostResponse
 )
 from app.services.ai_engine import AIEngineService
+from app.services.publisher import SocialPublisherService
 from typing import List, Optional
 from datetime import datetime
 
@@ -138,7 +139,6 @@ def request_changes_and_refine(post_id: str, req: PostChangeRequest, db: Session
 
     brand = db.query(Brand).filter(Brand.id == post.brand_id).first()
 
-    # AI rewrites the post
     refined_text = AIEngineService.refine_post(
         original_content=post.content,
         user_feedback=req.feedback,
@@ -173,7 +173,60 @@ def edit_post_content(post_id: str, req: PostEditRequest, db: Session = Depends(
     return post
 
 
-# ----------------- 3. LISTING & FEED ENDPOINTS -----------------
+# ----------------- 3. PUBLISHING DISPATCHER ENDPOINT -----------------
+
+@router.post("/{post_id}/publish-now", response_model=PostResponse)
+def publish_post_now(post_id: str, db: Session = Depends(get_db)):
+    """
+    Publishes an approved post to its designated social media handle immediately.
+    Security Rule: If post is not approved yet, it will fail unless explicitly confirmed.
+    """
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if post.status == PostStatus.PUBLISHED:
+        raise HTTPException(status_code=400, detail="This post is already published.")
+
+    # Find the connected social media account for this brand and platform
+    account = None
+    if post.social_account_id:
+        account = db.query(SocialAccount).filter(SocialAccount.id == post.social_account_id).first()
+    else:
+        account = db.query(SocialAccount).filter(
+            SocialAccount.brand_id == post.brand_id,
+            SocialAccount.platform == post.platform,
+            SocialAccount.is_active == True
+        ).first()
+
+    if not account:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No active connected {post.platform} account found for this brand. Please connect an account first in /api/social/connect"
+        )
+
+    # Transition to PUBLISHING to lock against race conditions
+    post.status = PostStatus.PUBLISHING
+    db.commit()
+
+    try:
+        dispatch_result = SocialPublisherService.publish(post, account)
+        post.status = PostStatus.PUBLISHED
+        post.published_at = datetime.utcnow()
+        post.platform_post_id = dispatch_result.get("platform_post_id")
+        post.error_message = None
+        db.commit()
+        db.refresh(post)
+        return post
+    except Exception as e:
+        post.status = PostStatus.FAILED
+        post.error_message = str(e)
+        db.commit()
+        db.refresh(post)
+        raise HTTPException(status_code=500, detail=f"Failed to publish post: {str(e)}")
+
+
+# ----------------- 4. LISTING & FEED ENDPOINTS -----------------
 
 @router.get("", response_model=List[PostResponse])
 def list_posts(
