@@ -92,9 +92,12 @@ class PostProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> approvePost(String postId) async {
+  Future<bool> approvePost(String postId, {DateTime? scheduledFor}) async {
     try {
-      final response = await ApiClient.dio.post(ApiEndpoints.approvePost(postId));
+      final response = await ApiClient.dio.post(
+        ApiEndpoints.approvePost(postId),
+        data: scheduledFor != null ? {'scheduled_for': scheduledFor.toIso8601String()} : null,
+      );
       if (response.statusCode == 200) {
         final updated = PostModel.fromJson(response.data);
         final index = _posts.indexWhere((p) => p.id == postId);

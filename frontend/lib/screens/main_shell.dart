@@ -7,6 +7,7 @@ import '../providers/brand_provider.dart';
 import 'inbox/post_approval_inbox_screen.dart';
 import 'strategy/strategy_blueprint_screen.dart';
 import 'brand/brand_brain_vault_screen.dart';
+import 'analytics/analytics_screen.dart';
 import 'social/social_accounts_hub_screen.dart';
 import 'brand/brand_setup_screen.dart';
 import 'auth/login_screen.dart';
@@ -25,6 +26,7 @@ class _MainShellState extends State<MainShell> {
     PostApprovalInboxScreen(),
     StrategyBlueprintScreen(),
     BrandBrainVaultScreen(),
+    AnalyticsScreen(),
     SocialAccountsHubScreen(),
   ];
 
@@ -140,6 +142,11 @@ class _MainShellState extends State<MainShell> {
                 icon: Icon(Icons.hub_rounded),
                 selectedIcon: Icon(Icons.hub_rounded),
                 label: 'Brand Brain',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.insights_rounded),
+                selectedIcon: Icon(Icons.insights_rounded),
+                label: 'Analytics',
               ),
               NavigationDestination(
                 icon: Icon(Icons.share_rounded),

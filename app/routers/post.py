@@ -134,6 +134,8 @@ def approve_post(post_id: str, req: PostApproveRequest = None, db: Session = Dep
     post.status = PostStatus.APPROVED
     if req and req.scheduled_for:
         post.scheduled_for = req.scheduled_for
+        if req.scheduled_for > datetime.utcnow():
+            post.status = PostStatus.SCHEDULED
     else:
         post.scheduled_for = datetime.utcnow()
 

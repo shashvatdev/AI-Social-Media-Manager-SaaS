@@ -25,6 +25,13 @@ class EditorialBadge extends StatelessWidget {
           textColor: AppColors.emeraldSuccess,
           icon: Icons.check_circle_rounded,
         );
+      case 'SCHEDULED':
+        return const EditorialBadge(
+          label: 'SCHEDULED QUEUE',
+          backgroundColor: Color(0x33EAAA00),
+          textColor: AppColors.marigold,
+          icon: Icons.schedule_rounded,
+        );
       case 'PUBLISHED':
         return const EditorialBadge(
           label: 'LIVE ON SOCIAL',

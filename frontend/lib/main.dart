@@ -7,6 +7,7 @@ import 'providers/brand_provider.dart';
 import 'providers/strategy_provider.dart';
 import 'providers/post_provider.dart';
 import 'providers/social_provider.dart';
+import 'providers/analytics_provider.dart';
 import 'screens/auth/splash_screen.dart';
 
 void main() {
@@ -21,6 +22,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => StrategyProvider()),
         ChangeNotifierProvider(create: (_) => PostProvider()),
         ChangeNotifierProvider(create: (_) => SocialProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
       ],
       child: const SocialMediaAiApp(),
     ),

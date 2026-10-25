@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../providers/brand_provider.dart';
@@ -206,6 +207,70 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
     );
   }
 
+  void _showScheduleDialog(BuildContext context, PostModel post) async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(hours: 2)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 90)),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.marigold,
+              onPrimary: AppColors.textOnMarigold,
+              surface: AppColors.surfaceAubergine,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate == null || !context.mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 2))),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.marigold,
+              onPrimary: AppColors.textOnMarigold,
+              surface: AppColors.surfaceAubergine,
+              onSurface: AppColors.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null || !context.mounted) return;
+
+    final scheduleDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    final success = await context.read<PostProvider>().approvePost(post.id, scheduledFor: scheduleDateTime);
+    if (!context.mounted) return;
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post queued for autonomous publishing at ${DateFormat('MMM d, h:mm a').format(scheduleDateTime)}!'),
+          backgroundColor: AppColors.emeraldSuccess,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final brand = context.watch<BrandProvider>().activeBrand;
@@ -248,6 +313,8 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                 child: Row(
                   children: [
                     _buildFilterChip('WAITING REVIEW', 'PENDING_APPROVAL', postProvider, brand.id),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('SCHEDULED', 'SCHEDULED', postProvider, brand.id),
                     const SizedBox(width: 8),
                     _buildFilterChip('APPROVED QUEUE', 'APPROVED', postProvider, brand.id),
                     const SizedBox(width: 8),
@@ -350,6 +417,7 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
   Widget _buildPostCard(BuildContext context, PostModel post, String brandId) {
     final isPending = post.status == 'PENDING_APPROVAL';
     final isApproved = post.status == 'APPROVED';
+    final isScheduled = post.status == 'SCHEDULED';
 
     return Container(
       decoration: BoxDecoration(
@@ -489,11 +557,32 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                     icon: const Icon(Icons.edit_note_rounded, color: AppColors.iceSilver, size: 18),
                     label: Text('AI Rewrite', style: AppTextStyles.bodyBold.copyWith(color: AppColors.iceSilver, fontSize: 13)),
                   ),
-                  // Approve & Schedule
+                  // Schedule Button
+                  TextButton.icon(
+                    onPressed: () => _showScheduleDialog(context, post),
+                    icon: const Icon(Icons.schedule_rounded, color: AppColors.marigold, size: 18),
+                    label: Text('Schedule', style: AppTextStyles.bodyBold.copyWith(color: AppColors.marigold, fontSize: 13)),
+                  ),
+                  // Approve Immediate
                   GlowingButton(
                     text: 'Approve',
                     onPressed: () => context.read<PostProvider>().approvePost(post.id),
                     icon: Icons.check_rounded,
+                  ),
+                ],
+                if (isScheduled) ...[
+                  if (post.scheduledFor != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      child: Text(
+                        'Queued: ${DateFormat('MMM d, h:mm a').format(post.scheduledFor!)}',
+                        style: AppTextStyles.labelCaption.copyWith(color: AppColors.marigold),
+                      ),
+                    ),
+                  GlowingButton(
+                    text: 'Publish Now',
+                    onPressed: () => context.read<PostProvider>().publishNow(post.id),
+                    icon: Icons.rocket_launch_rounded,
                   ),
                 ],
                 if (isApproved) ...[
