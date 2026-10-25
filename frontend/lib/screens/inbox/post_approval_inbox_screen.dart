@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -634,6 +635,23 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                 const Spacer(),
                 if (post.qualityScore != null)
                   EditorialBadge.qualityScore(post.qualityScore!),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.copy_rounded, size: 16, color: AppColors.textTertiary),
+                  tooltip: 'Copy caption & hashtags',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () {
+                    final fullText = '${post.content}\n\n${post.hashtags.join(' ')}';
+                    Clipboard.setData(ClipboardData(text: fullText));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Post copy and hashtags copied to clipboard!'),
+                        duration: Duration(seconds: 2),
+                        backgroundColor: AppColors.deepAubergine,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),

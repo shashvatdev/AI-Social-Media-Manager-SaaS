@@ -17,6 +17,7 @@ class ApiEndpoints {
   static String getStrategy(String id) => '$baseUrl/brands/$id/strategy';
   static String updateStrategy(String id) => '$baseUrl/brands/$id/strategy';
   static String brandAnalytics(String id) => '$baseUrl/brands/$id/analytics';
+  static String exportReport(String id) => '$baseUrl/brands/$id/export';
 
   // Posts
   static const String posts = '$baseUrl/posts';

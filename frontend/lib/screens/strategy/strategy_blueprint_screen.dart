@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/network/api_client.dart';
+import '../../core/network/api_endpoints.dart';
 import '../../providers/brand_provider.dart';
 import '../../providers/strategy_provider.dart';
 import '../../widgets/glowing_button.dart';
@@ -25,6 +28,103 @@ class _StrategyBlueprintScreenState extends State<StrategyBlueprintScreen> {
         context.read<StrategyProvider>().fetchStrategy(brand.id);
       }
     });
+  }
+
+  void _showExportModal(BuildContext context, String brandId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.marigold)),
+    );
+
+    try {
+      final response = await ApiClient.dio.get(ApiEndpoints.exportReport(brandId));
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // dismiss loading
+
+      final markdown = response.data['report_markdown'] as String? ?? '';
+
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: AppColors.surfaceAubergine,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.85,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (ctx, scrollController) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('EXECUTIVE REPORT EXPORT', style: AppTextStyles.labelCaption),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, color: AppColors.iceSilver),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Editorial Blueprint & Pipeline', style: AppTextStyles.displaySub),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.darkCanvas,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.borderAubergine),
+                        ),
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: SelectableText(
+                            markdown,
+                            style: AppTextStyles.bodyMedium.copyWith(fontFamily: 'monospace', fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: GlowingButton(
+                        text: 'Copy Full Markdown Report',
+                        icon: Icons.copy_all_rounded,
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: markdown));
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Executive Report copied to clipboard! Ready to paste into Notion/Slack.'),
+                              backgroundColor: AppColors.emeraldSuccess,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export failed: $e'), backgroundColor: AppColors.crimsonReject),
+      );
+    }
   }
 
   @override
@@ -63,13 +163,27 @@ class _StrategyBlueprintScreenState extends State<StrategyBlueprintScreen> {
                       Text('Strategy Blueprint.', style: AppTextStyles.displayTitle),
                     ],
                   ),
-                  if (strategy != null)
-                    EditorialBadge(
-                      label: strategy.isApproved ? 'APPROVED STRATEGY' : 'PENDING REVIEW',
-                      backgroundColor: strategy.isApproved ? const Color(0x2200E599) : AppColors.marigoldGlow,
-                      textColor: strategy.isApproved ? AppColors.emeraldSuccess : AppColors.marigold,
-                      icon: strategy.isApproved ? Icons.verified_rounded : Icons.pending_actions_rounded,
-                    ),
+                  Row(
+                    children: [
+                      IconButton.filledTonal(
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surfaceAubergine,
+                          foregroundColor: AppColors.marigold,
+                        ),
+                        icon: const Icon(Icons.download_rounded),
+                        tooltip: 'Export Executive Report',
+                        onPressed: () => _showExportModal(context, brand.id),
+                      ),
+                      const SizedBox(width: 8),
+                      if (strategy != null)
+                        EditorialBadge(
+                          label: strategy.isApproved ? 'APPROVED STRATEGY' : 'PENDING REVIEW',
+                          backgroundColor: strategy.isApproved ? const Color(0x2200E599) : AppColors.marigoldGlow,
+                          textColor: strategy.isApproved ? AppColors.emeraldSuccess : AppColors.marigold,
+                          icon: strategy.isApproved ? Icons.verified_rounded : Icons.pending_actions_rounded,
+                        ),
+                    ],
+                  ),
                 ],
               ),
 

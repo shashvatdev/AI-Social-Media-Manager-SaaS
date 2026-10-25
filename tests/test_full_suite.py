@@ -121,5 +121,15 @@ class EnterpriseSocialAITestSuite(unittest.TestCase):
         self.assertIsNotNone(post.published_at)
         self.assertIsNotNone(post.platform_post_id)
 
+    def test_06_brand_export_report(self):
+        """Verifies generating an executive Markdown report of the strategy & schedule."""
+        res = self.client.get(f"/api/brands/{self.brand_id}/export")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["brand_name"], "Acme Autonomous AI")
+        self.assertIn("report_markdown", data)
+        self.assertIn("30-Day Editorial Content Blueprint", data["report_markdown"])
+        self.assertGreaterEqual(data["total_posts"], 1)
+
 if __name__ == "__main__":
     unittest.main()
