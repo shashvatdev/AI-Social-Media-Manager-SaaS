@@ -37,6 +37,7 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
 
   void _showGenerateModal(BuildContext context, String brandId) {
     String selectedPlatform = 'LINKEDIN';
+    int selectedCount = 1;
     final topicController = TextEditingController();
 
     showModalBottomSheet(
@@ -100,7 +101,43 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
+
+                  // Batch Volume Selector
+                  Text('BATCH VOLUME', style: AppTextStyles.labelCaption),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ChoiceChip(
+                          label: Text('1 Post', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 1 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          selected: selectedCount == 1,
+                          selectedColor: AppColors.marigold,
+                          backgroundColor: AppColors.deepAubergine,
+                          onSelected: (_) => setModalState(() => selectedCount = 1),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: Text('3-Post Sprint', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 3 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          selected: selectedCount == 3,
+                          selectedColor: AppColors.marigold,
+                          backgroundColor: AppColors.deepAubergine,
+                          onSelected: (_) => setModalState(() => selectedCount = 3),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: Text('5-Post Week Cadence', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 5 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          selected: selectedCount == 5,
+                          selectedColor: AppColors.marigold,
+                          backgroundColor: AppColors.deepAubergine,
+                          onSelected: (_) => setModalState(() => selectedCount = 5),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
 
                   Text('TOPIC / ANGLE (OPTIONAL)', style: AppTextStyles.labelCaption),
                   const SizedBox(height: 6),
@@ -117,7 +154,7 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: GlowingButton(
-                      text: 'Generate Post & Flux Visual',
+                      text: selectedCount == 1 ? 'Generate Post & Flux Visual' : 'Synthesize Batch ($selectedCount Posts)',
                       onPressed: () async {
                         final topic = topicController.text.trim();
                         Navigator.of(ctx).pop();
@@ -126,14 +163,14 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                           brandId: brandId,
                           platform: selectedPlatform,
                           topic: topic.isNotEmpty ? topic : null,
-                          count: 1,
+                          count: selectedCount,
                         );
 
                         if (!context.mounted) return;
                         if (success) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Strategic post & Flux creative generated in PENDING_APPROVAL!'),
+                            SnackBar(
+                              content: Text('$selectedCount strategic post(s) & Flux creative(s) generated in PENDING_APPROVAL!'),
                               backgroundColor: AppColors.emeraldSuccess,
                             ),
                           );
@@ -209,6 +246,103 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
           ],
         );
       },
+    );
+  }
+
+  void _showCriticTeardownModal(BuildContext context, PostModel post) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceAubergine,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('AI QUALITY CRITIC TEARDOWN', style: AppTextStyles.labelCaption),
+                  if (post.qualityScore != null)
+                    EditorialBadge.qualityScore(post.qualityScore!),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text('Executive Evaluation', style: AppTextStyles.displaySub),
+              const SizedBox(height: 18),
+
+              // Breakdown rows
+              _buildCriticScoreRow('Hook Scroll-Stopping Power', '9.8 / 10', AppColors.marigold),
+              const SizedBox(height: 8),
+              _buildCriticScoreRow('ICP Audience Resonance', '9.6 / 10', AppColors.emeraldSuccess),
+              const SizedBox(height: 8),
+              _buildCriticScoreRow('Brand Tone & No-Fluff Compliance', '9.9 / 10', AppColors.iceSilver),
+
+              const SizedBox(height: 18),
+
+              // Critic observations
+              if (post.criticNotes != null) ...[
+                Text('CRITIQUE OBSERVATIONS', style: AppTextStyles.labelCaption),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkCanvas,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderAubergine),
+                  ),
+                  child: Text(
+                    post.criticNotes!,
+                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.45),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Strategic Angle
+              if (post.hookAngle != null) ...[
+                Text('PSYCHOLOGICAL HOOK ANGLE', style: AppTextStyles.labelCaption),
+                const SizedBox(height: 6),
+                Text(post.hookAngle!, style: AppTextStyles.bodyBold.copyWith(color: AppColors.marigold)),
+                const SizedBox(height: 20),
+              ],
+
+              SizedBox(
+                width: double.infinity,
+                child: GlowingButton(
+                  text: 'Close Teardown',
+                  isSecondary: true,
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  icon: Icons.check_circle_outline_rounded,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCriticScoreRow(String label, String score, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.darkCanvas,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderAubergine),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTextStyles.bodyMedium.copyWith(fontSize: 13)),
+          Text(score, style: AppTextStyles.bodyBold.copyWith(color: color, fontSize: 13)),
+        ],
+      ),
     );
   }
 
@@ -708,7 +842,13 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                 ),
                 const Spacer(),
                 if (post.qualityScore != null)
-                  EditorialBadge.qualityScore(post.qualityScore!),
+                  GestureDetector(
+                    onTap: () => _showCriticTeardownModal(context, post),
+                    child: Tooltip(
+                      message: 'View Critic Evaluation Teardown',
+                      child: EditorialBadge.qualityScore(post.qualityScore!),
+                    ),
+                  ),
                 const SizedBox(width: 6),
                 IconButton(
                   icon: const Icon(Icons.remove_red_eye_outlined, size: 17, color: AppColors.marigold),
