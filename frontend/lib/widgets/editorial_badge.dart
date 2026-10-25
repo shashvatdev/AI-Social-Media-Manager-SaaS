@@ -21,37 +21,37 @@ class EditorialBadge extends StatelessWidget {
       case 'APPROVED':
         return const EditorialBadge(
           label: 'APPROVED',
-          backgroundColor: Color(0x2200E599),
-          textColor: AppColors.emeraldSuccess,
+          backgroundColor: Color(0xFFECFDF5),
+          textColor: Color(0xFF059669),
           icon: Icons.check_circle_rounded,
         );
       case 'SCHEDULED':
         return const EditorialBadge(
           label: 'SCHEDULED QUEUE',
-          backgroundColor: Color(0x33EAAA00),
-          textColor: AppColors.marigold,
+          backgroundColor: Color(0xFFFFFBEB),
+          textColor: Color(0xFFD97706),
           icon: Icons.schedule_rounded,
         );
       case 'PUBLISHED':
         return const EditorialBadge(
           label: 'LIVE ON SOCIAL',
-          backgroundColor: Color(0x33EAAA00),
-          textColor: AppColors.marigold,
+          backgroundColor: Color(0xFFEFF6FF),
+          textColor: Color(0xFF2563EB),
           icon: Icons.rocket_launch_rounded,
         );
       case 'REJECTED':
         return const EditorialBadge(
           label: 'REJECTED',
-          backgroundColor: Color(0x22FF3366),
-          textColor: AppColors.crimsonReject,
+          backgroundColor: Color(0xFFFEF2F2),
+          textColor: Color(0xFFDC2626),
           icon: Icons.cancel_rounded,
         );
       case 'PENDING_APPROVAL':
       default:
         return const EditorialBadge(
           label: 'WAITING YOUR APPROVAL',
-          backgroundColor: Color(0x333A0F34),
-          textColor: AppColors.iceSilver,
+          backgroundColor: Color(0xFFF1F5F9),
+          textColor: AppColors.deepAubergine,
           icon: Icons.hourglass_top_rounded,
         );
     }
@@ -59,19 +59,19 @@ class EditorialBadge extends StatelessWidget {
 
   factory EditorialBadge.qualityScore(String score) {
     return EditorialBadge(
-      label: 'QUALITY SCORE: $score',
-      backgroundColor: const Color(0x22EAAA00),
-      textColor: AppColors.marigold,
-      icon: Icons.stars_rounded,
+      label: 'CRITIC $score',
+      backgroundColor: const Color(0xFFFFFBEB),
+      textColor: const Color(0xFFD97706),
+      icon: Icons.star_rounded,
     );
   }
 
   factory EditorialBadge.funnel(String stage) {
     return EditorialBadge(
       label: stage.toUpperCase(),
-      backgroundColor: const Color(0x224C1844),
-      textColor: AppColors.iceSilver,
-      icon: Icons.filter_alt_rounded,
+      backgroundColor: const Color(0xFFF8FAFC),
+      textColor: AppColors.textSecondary,
+      icon: Icons.filter_alt_outlined,
     );
   }
 
@@ -82,7 +82,7 @@ class EditorialBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: textColor.withValues(alpha: 0.3), width: 1),
+        border: Border.all(color: textColor.withValues(alpha: 0.25), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

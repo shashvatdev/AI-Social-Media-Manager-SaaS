@@ -135,10 +135,11 @@ class _SocialAccountsHubScreenState extends State<SocialAccountsHubScreen> {
   Widget _buildPlatformChip(String platform, String selected, ValueChanged<String> onSelect) {
     final isSelected = platform == selected;
     return ChoiceChip(
-      label: Text(platform, style: AppTextStyles.badgeText.copyWith(color: isSelected ? AppColors.textOnMarigold : AppColors.iceSilver)),
+      label: Text(platform, style: AppTextStyles.badgeText.copyWith(color: isSelected ? AppColors.textOnMarigold : AppColors.textPrimary)),
       selected: isSelected,
       selectedColor: AppColors.marigold,
-      backgroundColor: AppColors.deepAubergine,
+      backgroundColor: AppColors.darkCanvas,
+      side: const BorderSide(color: AppColors.borderAubergine),
       onSelected: (_) => onSelect(platform),
     );
   }
@@ -239,7 +240,7 @@ class _SocialAccountsHubScreenState extends State<SocialAccountsHubScreen> {
                         children: [
                           CircleAvatar(
                             radius: 22,
-                            backgroundColor: AppColors.deepAubergine,
+                            backgroundColor: const Color(0xFFFFFBEB),
                             child: Icon(
                               acc.platform == 'LINKEDIN'
                                   ? Icons.work_rounded
@@ -261,8 +262,8 @@ class _SocialAccountsHubScreenState extends State<SocialAccountsHubScreen> {
                                     const SizedBox(width: 8),
                                     EditorialBadge(
                                       label: acc.platform,
-                                      backgroundColor: AppColors.deepAubergine,
-                                      textColor: AppColors.iceSilver,
+                                      backgroundColor: const Color(0xFFF1F5F9),
+                                      textColor: AppColors.textPrimary,
                                     ),
                                   ],
                                 ),

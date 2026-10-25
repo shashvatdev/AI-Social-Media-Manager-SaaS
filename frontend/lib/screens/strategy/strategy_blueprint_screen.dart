@@ -178,7 +178,7 @@ class _StrategyBlueprintScreenState extends State<StrategyBlueprintScreen> {
                       if (strategy != null)
                         EditorialBadge(
                           label: strategy.isApproved ? 'APPROVED STRATEGY' : 'PENDING REVIEW',
-                          backgroundColor: strategy.isApproved ? const Color(0x2200E599) : AppColors.marigoldGlow,
+                          backgroundColor: strategy.isApproved ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
                           textColor: strategy.isApproved ? AppColors.emeraldSuccess : AppColors.marigold,
                           icon: strategy.isApproved ? Icons.verified_rounded : Icons.pending_actions_rounded,
                         ),
@@ -208,7 +208,7 @@ class _StrategyBlueprintScreenState extends State<StrategyBlueprintScreen> {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: AppColors.deepAubergine,
+                          color: const Color(0xFFFFFBEB),
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.borderAubergine),
                         ),

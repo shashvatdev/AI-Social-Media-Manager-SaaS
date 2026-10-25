@@ -80,7 +80,7 @@ class FluxImageCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         'AI FLUX CREATIVE (1024x1024)',
-                        style: AppTextStyles.badgeText.copyWith(color: AppColors.iceSilver),
+                        style: AppTextStyles.badgeText.copyWith(color: Colors.white),
                       ),
                     ],
                   ),

@@ -125,7 +125,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             value: '${analytics?.scheduledCount ?? 0}',
                             subtitle: '${analytics?.pendingApprovalCount ?? 0} awaiting review',
                             icon: Icons.schedule_send_rounded,
-                            accentColor: AppColors.iceSilver,
+                            accentColor: AppColors.cobaltInfo,
                           ),
                         ),
                       ],
@@ -202,8 +202,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           children: analytics.platformDistribution.entries.map((entry) {
                             return EditorialBadge(
                               label: '${entry.key}: ${entry.value} posts',
-                              textColor: AppColors.iceSilver,
-                              backgroundColor: AppColors.darkCanvas,
+                              textColor: AppColors.textPrimary,
+                              backgroundColor: const Color(0xFFF1F5F9),
                               icon: Icons.send_rounded,
                             );
                           }).toList(),

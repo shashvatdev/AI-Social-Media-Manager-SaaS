@@ -72,30 +72,33 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                       ChoiceChip(
                         label: Text('LINKEDIN',
                             style: AppTextStyles.badgeText.copyWith(
-                                color: selectedPlatform == 'LINKEDIN' ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                                color: selectedPlatform == 'LINKEDIN' ? AppColors.textOnMarigold : AppColors.textPrimary)),
                         selected: selectedPlatform == 'LINKEDIN',
                         selectedColor: AppColors.marigold,
-                        backgroundColor: AppColors.deepAubergine,
+                        backgroundColor: AppColors.darkCanvas,
+                        side: const BorderSide(color: AppColors.borderAubergine),
                         onSelected: (_) => setModalState(() => selectedPlatform = 'LINKEDIN'),
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
                         label: Text('INSTAGRAM',
                             style: AppTextStyles.badgeText.copyWith(
-                                color: selectedPlatform == 'INSTAGRAM' ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                                color: selectedPlatform == 'INSTAGRAM' ? AppColors.textOnMarigold : AppColors.textPrimary)),
                         selected: selectedPlatform == 'INSTAGRAM',
                         selectedColor: AppColors.marigold,
-                        backgroundColor: AppColors.deepAubergine,
+                        backgroundColor: AppColors.darkCanvas,
+                        side: const BorderSide(color: AppColors.borderAubergine),
                         onSelected: (_) => setModalState(() => selectedPlatform = 'INSTAGRAM'),
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
                         label: Text('TWITTER',
                             style: AppTextStyles.badgeText.copyWith(
-                                color: selectedPlatform == 'TWITTER' ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                                color: selectedPlatform == 'TWITTER' ? AppColors.textOnMarigold : AppColors.textPrimary)),
                         selected: selectedPlatform == 'TWITTER',
                         selectedColor: AppColors.marigold,
-                        backgroundColor: AppColors.deepAubergine,
+                        backgroundColor: AppColors.darkCanvas,
+                        side: const BorderSide(color: AppColors.borderAubergine),
                         onSelected: (_) => setModalState(() => selectedPlatform = 'TWITTER'),
                       ),
                     ],
@@ -111,26 +114,29 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                     child: Row(
                       children: [
                         ChoiceChip(
-                          label: Text('1 Post', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 1 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          label: Text('1 Post', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 1 ? AppColors.textOnMarigold : AppColors.textPrimary)),
                           selected: selectedCount == 1,
                           selectedColor: AppColors.marigold,
-                          backgroundColor: AppColors.deepAubergine,
+                          backgroundColor: AppColors.darkCanvas,
+                          side: const BorderSide(color: AppColors.borderAubergine),
                           onSelected: (_) => setModalState(() => selectedCount = 1),
                         ),
                         const SizedBox(width: 8),
                         ChoiceChip(
-                          label: Text('3-Post Sprint', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 3 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          label: Text('3-Post Sprint', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 3 ? AppColors.textOnMarigold : AppColors.textPrimary)),
                           selected: selectedCount == 3,
                           selectedColor: AppColors.marigold,
-                          backgroundColor: AppColors.deepAubergine,
+                          backgroundColor: AppColors.darkCanvas,
+                          side: const BorderSide(color: AppColors.borderAubergine),
                           onSelected: (_) => setModalState(() => selectedCount = 3),
                         ),
                         const SizedBox(width: 8),
                         ChoiceChip(
-                          label: Text('5-Post Week Cadence', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 5 ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                          label: Text('5-Post Week Cadence', style: AppTextStyles.badgeText.copyWith(color: selectedCount == 5 ? AppColors.textOnMarigold : AppColors.textPrimary)),
                           selected: selectedCount == 5,
                           selectedColor: AppColors.marigold,
-                          backgroundColor: AppColors.deepAubergine,
+                          backgroundColor: AppColors.darkCanvas,
+                          side: const BorderSide(color: AppColors.borderAubergine),
                           onSelected: (_) => setModalState(() => selectedCount = 5),
                         ),
                       ],
@@ -651,10 +657,11 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
   Widget _buildFilterChip(String label, String statusKey, PostProvider provider, String brandId) {
     final isSelected = provider.currentFilter == statusKey;
     return ChoiceChip(
-      label: Text(label, style: AppTextStyles.badgeText.copyWith(color: isSelected ? AppColors.textOnMarigold : AppColors.iceSilver)),
+      label: Text(label, style: AppTextStyles.badgeText.copyWith(color: isSelected ? Colors.white : AppColors.textSecondary)),
       selected: isSelected,
       selectedColor: AppColors.marigold,
-      backgroundColor: AppColors.surfaceAubergine,
+      backgroundColor: Colors.white,
+      side: BorderSide(color: isSelected ? AppColors.marigold : AppColors.borderAubergine),
       onSelected: (_) => provider.setFilter(statusKey, brandId),
     );
   }
@@ -818,12 +825,19 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceAubergine,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isPending ? AppColors.borderHighlight : AppColors.borderAubergine,
+          color: isPending ? AppColors.marigold : AppColors.borderAubergine,
           width: isPending ? 1.5 : 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -837,8 +851,8 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                 const SizedBox(width: 8),
                 EditorialBadge(
                   label: post.platform,
-                  backgroundColor: AppColors.deepAubergine,
-                  textColor: AppColors.iceSilver,
+                  backgroundColor: const Color(0xFFF1F5F9),
+                  textColor: AppColors.deepAubergine,
                 ),
                 const Spacer(),
                 if (post.qualityScore != null)
@@ -870,7 +884,7 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                       const SnackBar(
                         content: Text('Post copy and hashtags copied to clipboard!'),
                         duration: Duration(seconds: 2),
-                        backgroundColor: AppColors.deepAubergine,
+                        backgroundColor: AppColors.textPrimary,
                       ),
                     );
                   },
@@ -893,7 +907,7 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                     Expanded(
                       child: Text(
                         'Pillar: ${post.pillar!}',
-                        style: AppTextStyles.labelCaption.copyWith(color: AppColors.iceSilver),
+                        style: AppTextStyles.labelCaption.copyWith(color: AppColors.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -983,14 +997,14 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                   // Edit Button
                   TextButton.icon(
                     onPressed: () => _showEditDialog(context, post),
-                    icon: const Icon(Icons.edit_outlined, color: AppColors.iceSilver, size: 16),
-                    label: Text('Edit', style: AppTextStyles.bodyBold.copyWith(color: AppColors.iceSilver, fontSize: 13)),
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary, size: 16),
+                    label: Text('Edit', style: AppTextStyles.bodyBold.copyWith(color: AppColors.textSecondary, fontSize: 13)),
                   ),
                   // Rewrite Button
                   TextButton.icon(
                     onPressed: () => _showRewriteDialog(context, post),
-                    icon: const Icon(Icons.auto_awesome, color: AppColors.iceSilver, size: 16),
-                    label: Text('AI Rewrite', style: AppTextStyles.bodyBold.copyWith(color: AppColors.iceSilver, fontSize: 13)),
+                    icon: const Icon(Icons.auto_awesome, color: AppColors.textSecondary, size: 16),
+                    label: Text('AI Rewrite', style: AppTextStyles.bodyBold.copyWith(color: AppColors.textSecondary, fontSize: 13)),
                   ),
                   // Schedule Button
                   TextButton.icon(

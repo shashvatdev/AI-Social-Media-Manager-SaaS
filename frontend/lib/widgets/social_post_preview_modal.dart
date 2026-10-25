@@ -78,18 +78,20 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
                 Row(
                   children: [
                     ChoiceChip(
-                      label: Text('LinkedIn', style: AppTextStyles.badgeText.copyWith(color: _currentPlatform == 'LINKEDIN' ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                      label: Text('LinkedIn', style: AppTextStyles.badgeText.copyWith(color: _currentPlatform == 'LINKEDIN' ? AppColors.textOnMarigold : AppColors.textPrimary)),
                       selected: _currentPlatform == 'LINKEDIN',
                       selectedColor: AppColors.marigold,
                       backgroundColor: AppColors.darkCanvas,
+                      side: const BorderSide(color: AppColors.borderAubergine),
                       onSelected: (_) => setState(() => _currentPlatform = 'LINKEDIN'),
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: Text('Twitter / X', style: AppTextStyles.badgeText.copyWith(color: _currentPlatform == 'TWITTER' ? AppColors.textOnMarigold : AppColors.iceSilver)),
+                      label: Text('Twitter / X', style: AppTextStyles.badgeText.copyWith(color: _currentPlatform == 'TWITTER' ? AppColors.textOnMarigold : AppColors.textPrimary)),
                       selected: _currentPlatform == 'TWITTER',
                       selectedColor: AppColors.marigold,
                       backgroundColor: AppColors.darkCanvas,
+                      side: const BorderSide(color: AppColors.borderAubergine),
                       onSelected: (_) => setState(() => _currentPlatform = 'TWITTER'),
                     ),
                   ],
@@ -118,9 +120,16 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
   Widget _buildLinkedInMockup() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1F23),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppColors.borderAubergine),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,23 +155,23 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
                     children: [
                       Row(
                         children: [
-                          Text(widget.brandName, style: AppTextStyles.bodyBold.copyWith(color: Colors.white, fontSize: 15)),
+                          Text(widget.brandName, style: AppTextStyles.bodyBold.copyWith(color: AppColors.textPrimary, fontSize: 15)),
                           const SizedBox(width: 6),
-                          Text('• 1st', style: AppTextStyles.labelCaption.copyWith(color: Colors.white60)),
+                          Text('• 1st', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary)),
                         ],
                       ),
-                      Text('Autonomous Content Lead & AI Director', style: AppTextStyles.labelCaption.copyWith(color: Colors.white70, fontSize: 12)),
+                      Text('Autonomous Content Lead & AI Director', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textSecondary, fontSize: 12)),
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text('2h • ', style: AppTextStyles.labelCaption.copyWith(color: Colors.white38, fontSize: 11)),
-                          const Icon(Icons.public, color: Colors.white38, size: 12),
+                          Text('2h • ', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary, fontSize: 11)),
+                          const Icon(Icons.public, color: AppColors.textTertiary, size: 12),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.more_horiz, color: Colors.white60),
+                const Icon(Icons.more_horiz, color: AppColors.textTertiary),
               ],
             ),
           ),
@@ -172,7 +181,7 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SelectableText(
               widget.post.content,
-              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white.withValues(alpha: 0.95), height: 1.45, fontSize: 14),
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.45, fontSize: 14),
             ),
           ),
 
@@ -182,7 +191,7 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
               padding: const EdgeInsets.only(left: 16, right: 16, top: 10),
               child: Text(
                 widget.post.hashtags.join(' '),
-                style: AppTextStyles.bodyBold.copyWith(color: const Color(0xFF70B5F9), fontSize: 13),
+                style: AppTextStyles.bodyBold.copyWith(color: const Color(0xFF0A66C2), fontSize: 13),
               ),
             ),
 
@@ -196,7 +205,7 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
               fit: BoxFit.cover,
               placeholder: (_, __) => Container(
                 height: 260,
-                color: Colors.black26,
+                color: const Color(0xFFF1F5F9),
                 child: const Center(child: CircularProgressIndicator(color: AppColors.marigold)),
               ),
               errorWidget: (_, __, ___) => const SizedBox.shrink(),
@@ -210,19 +219,19 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.thumb_up_alt_rounded, size: 14, color: Color(0xFF378FE9)),
+                    const Icon(Icons.thumb_up_alt_rounded, size: 14, color: Color(0xFF0A66C2)),
                     const SizedBox(width: 4),
                     const Icon(Icons.favorite_rounded, size: 14, color: Color(0xFFDF704D)),
                     const SizedBox(width: 6),
-                    Text('142', style: AppTextStyles.labelCaption.copyWith(color: Colors.white60, fontSize: 12)),
+                    Text('142', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary, fontSize: 12)),
                   ],
                 ),
-                Text('28 comments • 14 reposts', style: AppTextStyles.labelCaption.copyWith(color: Colors.white60, fontSize: 12)),
+                Text('28 comments • 14 reposts', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary, fontSize: 12)),
               ],
             ),
           ),
 
-          const Divider(color: Colors.white12, height: 1),
+          const Divider(color: AppColors.borderAubergine, height: 1),
 
           // Interaction Action Buttons
           Padding(
@@ -247,9 +256,9 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.white70),
+          Icon(icon, size: 18, color: AppColors.textSecondary),
           const SizedBox(width: 6),
-          Text(label, style: AppTextStyles.bodyBold.copyWith(color: Colors.white70, fontSize: 12)),
+          Text(label, style: AppTextStyles.bodyBold.copyWith(color: AppColors.textSecondary, fontSize: 12)),
         ],
       ),
     );
@@ -259,9 +268,16 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: AppColors.borderAubergine),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,15 +297,15 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
               Expanded(
                 child: Row(
                   children: [
-                    Text(widget.brandName, style: AppTextStyles.bodyBold.copyWith(color: Colors.white, fontSize: 15)),
+                    Text(widget.brandName, style: AppTextStyles.bodyBold.copyWith(color: AppColors.textPrimary, fontSize: 15)),
                     const SizedBox(width: 4),
                     const Icon(Icons.verified, color: Color(0xFF1D9BF0), size: 16),
                     const SizedBox(width: 6),
-                    Text('@${widget.brandName.replaceAll(' ', '').toLowerCase()} · 2h', style: AppTextStyles.labelCaption.copyWith(color: Colors.white54)),
+                    Text('@${widget.brandName.replaceAll(' ', '').toLowerCase()} · 2h', style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary)),
                   ],
                 ),
               ),
-              const Icon(Icons.more_horiz, color: Colors.white54),
+              const Icon(Icons.more_horiz, color: AppColors.textTertiary),
             ],
           ),
 
@@ -298,7 +314,7 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
           // Tweet Body
           SelectableText(
             widget.post.content,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, height: 1.4, fontSize: 15),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.4, fontSize: 15),
           ),
 
           if (widget.post.hashtags.isNotEmpty)
@@ -322,7 +338,7 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
                   height: 240,
-                  color: Colors.white10,
+                  color: const Color(0xFFF1F5F9),
                   child: const Center(child: CircularProgressIndicator(color: AppColors.marigold)),
                 ),
                 errorWidget: (_, __, ___) => const SizedBox.shrink(),
@@ -350,10 +366,10 @@ class _SocialPostPreviewModalState extends State<SocialPostPreviewModal> {
   Widget _buildTwitterAction(IconData icon, String count) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.white54),
+        Icon(icon, size: 16, color: AppColors.textTertiary),
         if (count.isNotEmpty) ...[
           const SizedBox(width: 6),
-          Text(count, style: AppTextStyles.labelCaption.copyWith(color: Colors.white54, fontSize: 12)),
+          Text(count, style: AppTextStyles.labelCaption.copyWith(color: AppColors.textTertiary, fontSize: 12)),
         ],
       ],
     );

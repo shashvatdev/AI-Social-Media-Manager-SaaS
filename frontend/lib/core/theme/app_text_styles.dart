@@ -22,9 +22,9 @@ class AppTextStyles {
 
   static TextStyle displaySub = GoogleFonts.playfairDisplay(
     fontSize: 20,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.3,
-    color: AppColors.iceSilver,
+    color: AppColors.deepAubergine,
   );
 
   // --- MODERN PRECISION SANS (UI, Data, Copy) ---

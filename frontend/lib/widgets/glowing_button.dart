@@ -24,13 +24,13 @@ class GlowingButton extends StatelessWidget {
       return OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.iceSilver,
+          foregroundColor: AppColors.textPrimary,
           side: const BorderSide(color: AppColors.borderAubergine, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: AppColors.surfaceAubergine.withValues(alpha: 0.4),
+          backgroundColor: Colors.white,
         ),
-        child: _buildContent(AppColors.iceSilver),
+        child: _buildContent(AppColors.textPrimary),
       );
     }
 
@@ -41,8 +41,8 @@ class GlowingButton extends StatelessWidget {
             ? []
             : [
                 BoxShadow(
-                  color: AppColors.marigold.withValues(alpha: 0.35),
-                  blurRadius: 18,
+                  color: AppColors.marigold.withValues(alpha: 0.25),
+                  blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),
               ],
@@ -63,12 +63,12 @@ class GlowingButton extends StatelessWidget {
 
   Widget _buildContent(Color textColor) {
     if (isLoading) {
-      return SizedBox(
-        height: 20,
+      return const SizedBox(
         width: 20,
+        height: 20,
         child: CircularProgressIndicator(
-          strokeWidth: 2.2,
-          valueColor: AlwaysStoppedAnimation<Color>(textColor),
+          strokeWidth: 2,
+          color: Colors.white,
         ),
       );
     }
@@ -76,6 +76,7 @@ class GlowingButton extends StatelessWidget {
     if (icon != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 18, color: textColor),
           const SizedBox(width: 8),

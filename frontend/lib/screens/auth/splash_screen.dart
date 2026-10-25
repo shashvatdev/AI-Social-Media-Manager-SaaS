@@ -61,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.deepAubergine.withValues(alpha: 0.6),
+                    AppColors.marigold.withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -78,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.marigold.withValues(alpha: 0.2),
+                    AppColors.deepAubergine.withValues(alpha: 0.08),
                     Colors.transparent,
                   ],
                 ),

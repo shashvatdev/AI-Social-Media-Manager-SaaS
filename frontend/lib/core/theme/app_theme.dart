@@ -4,12 +4,14 @@ import 'app_colors.dart';
 import 'app_text_styles.dart';
 
 class AppTheme {
-  static ThemeData get luxuryDarkTheme {
+  static ThemeData get luxuryDarkTheme => luxuryLightTheme;
+
+  static ThemeData get luxuryLightTheme {
     return ThemeData(
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.darkCanvas,
       primaryColor: AppColors.marigold,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.marigold,
         secondary: AppColors.deepAubergine,
         surface: AppColors.surfaceAubergine,
@@ -17,11 +19,11 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.darkCanvas.withValues(alpha: 0.9),
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        iconTheme: const IconThemeData(color: AppColors.iceSilver),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: AppTextStyles.displaySub.copyWith(color: AppColors.textPrimary),
       ),
       cardTheme: CardThemeData(
@@ -34,7 +36,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceAubergine,
+        fillColor: Colors.white,
         hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         border: OutlineInputBorder(

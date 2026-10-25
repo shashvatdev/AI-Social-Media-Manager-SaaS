@@ -387,8 +387,8 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
                               runSpacing: 6,
                               children: _ragSources.map((s) => EditorialBadge(
                                 label: s,
-                                backgroundColor: AppColors.surfaceAubergine,
-                                textColor: AppColors.iceSilver,
+                                backgroundColor: AppColors.darkCanvas,
+                                textColor: AppColors.textSecondary,
                                 icon: Icons.source_rounded,
                               )).toList(),
                             ),
@@ -465,8 +465,8 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
                             ),
                             EditorialBadge(
                               label: isWeb ? 'CRAWLER' : 'DOCUMENT',
-                              backgroundColor: AppColors.deepAubergine,
-                              textColor: AppColors.iceSilver,
+                              backgroundColor: isWeb ? const Color(0xFFEFF6FF) : const Color(0xFFF1F5F9),
+                              textColor: isWeb ? AppColors.cobaltInfo : AppColors.deepAubergine,
                             ),
                           ],
                         ),
@@ -504,7 +504,7 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
 
   Widget _buildQueryChip(String text, String brandId) {
     return ActionChip(
-      label: Text(text, style: AppTextStyles.badgeText.copyWith(color: AppColors.iceSilver)),
+      label: Text(text, style: AppTextStyles.badgeText.copyWith(color: AppColors.textPrimary)),
       backgroundColor: AppColors.surfaceAubergine,
       side: const BorderSide(color: AppColors.borderAubergine),
       onPressed: () {
