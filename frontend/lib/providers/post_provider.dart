@@ -163,6 +163,30 @@ class PostProvider extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> editPost(String postId, {required String content, List<String>? hashtags}) async {
+    try {
+      final response = await ApiClient.dio.put(
+        ApiEndpoints.editPost(postId),
+        data: {
+          'content': content,
+          if (hashtags != null) 'hashtags': hashtags,
+        },
+      );
+      if (response.statusCode == 200) {
+        final updated = PostModel.fromJson(response.data);
+        final index = _posts.indexWhere((p) => p.id == postId);
+        if (index != -1) {
+          _posts[index] = updated;
+          notifyListeners();
+        }
+        return true;
+      }
+    } catch (e) {
+      debugPrint('[Edit Post Error] $e');
+    }
+    return false;
+  }
+
   Future<bool> publishNow(String postId) async {
     _isLoading = true;
     notifyListeners();

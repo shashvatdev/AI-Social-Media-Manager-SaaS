@@ -10,6 +10,7 @@ import '../../providers/post_provider.dart';
 import '../../widgets/glowing_button.dart';
 import '../../widgets/editorial_badge.dart';
 import '../../widgets/flux_image_card.dart';
+import '../../widgets/social_post_preview_modal.dart';
 import '../../models/post_model.dart';
 
 class PostApprovalInboxScreen extends StatefulWidget {
@@ -199,6 +200,79 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('AI refined the post based on your feedback!'),
+                      backgroundColor: AppColors.emeraldSuccess,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(BuildContext context, PostModel post) {
+    final contentController = TextEditingController(text: post.content);
+    final hashtagsController = TextEditingController(text: post.hashtags.join(', '));
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceAubergine,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: AppColors.borderAubergine),
+          ),
+          title: Text('Edit Post Content', style: AppTextStyles.displaySub),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('POST COPY', style: AppTextStyles.labelCaption),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: contentController,
+                  maxLines: 5,
+                  style: AppTextStyles.bodyBold,
+                  decoration: const InputDecoration(hintText: 'Enter updated post copy...'),
+                ),
+                const SizedBox(height: 16),
+                Text('HASHTAGS (COMMA SEPARATED)', style: AppTextStyles.labelCaption),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: hashtagsController,
+                  style: AppTextStyles.bodyBold,
+                  decoration: const InputDecoration(hintText: '#AI, #SaaS, #Tech'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('Cancel', style: AppTextStyles.bodyMedium),
+            ),
+            GlowingButton(
+              text: 'Save Changes',
+              onPressed: () async {
+                final updatedContent = contentController.text.trim();
+                final rawTags = hashtagsController.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+                Navigator.of(ctx).pop();
+
+                final success = await context.read<PostProvider>().editPost(
+                  post.id,
+                  content: updatedContent,
+                  hashtags: rawTags,
+                );
+
+                if (!context.mounted) return;
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Post copy updated successfully!'),
                       backgroundColor: AppColors.emeraldSuccess,
                     ),
                   );
@@ -635,7 +709,16 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                 const Spacer(),
                 if (post.qualityScore != null)
                   EditorialBadge.qualityScore(post.qualityScore!),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: const Icon(Icons.remove_red_eye_outlined, size: 17, color: AppColors.marigold),
+                  tooltip: 'Preview Feed Mockup',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () {
+                    final brand = context.read<BrandProvider>().activeBrand;
+                    SocialPostPreviewModal.show(context, post, brand?.name ?? 'Brand');
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded, size: 16, color: AppColors.textTertiary),
                   tooltip: 'Copy caption & hashtags',
@@ -757,10 +840,16 @@ class _PostApprovalInboxScreenState extends State<PostApprovalInboxScreen> {
                     icon: const Icon(Icons.cancel_outlined, color: AppColors.crimsonReject, size: 16),
                     label: Text('Reject', style: AppTextStyles.bodyBold.copyWith(color: AppColors.crimsonReject, fontSize: 13)),
                   ),
+                  // Edit Button
+                  TextButton.icon(
+                    onPressed: () => _showEditDialog(context, post),
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.iceSilver, size: 16),
+                    label: Text('Edit', style: AppTextStyles.bodyBold.copyWith(color: AppColors.iceSilver, fontSize: 13)),
+                  ),
                   // Rewrite Button
                   TextButton.icon(
                     onPressed: () => _showRewriteDialog(context, post),
-                    icon: const Icon(Icons.edit_note_rounded, color: AppColors.iceSilver, size: 18),
+                    icon: const Icon(Icons.auto_awesome, color: AppColors.iceSilver, size: 16),
                     label: Text('AI Rewrite', style: AppTextStyles.bodyBold.copyWith(color: AppColors.iceSilver, fontSize: 13)),
                   ),
                   // Schedule Button
