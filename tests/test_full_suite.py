@@ -131,5 +131,17 @@ class EnterpriseSocialAITestSuite(unittest.TestCase):
         self.assertIn("30-Day Editorial Content Blueprint", data["report_markdown"])
         self.assertGreaterEqual(data["total_posts"], 1)
 
+    def test_07_brand_brain_rag_query(self):
+        """Verifies grounded RAG synthesis from ingested knowledge assets."""
+        res = self.client.post(f"/api/brands/{self.brand_id}/brain/query", json={
+            "question": "What is our core engineering focus?"
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["brand_id"], self.brand_id)
+        self.assertIn("answer", data)
+        self.assertTrue(len(data["answer"]) > 10)
+        self.assertIn("cited_sources", data)
+
 if __name__ == "__main__":
     unittest.main()

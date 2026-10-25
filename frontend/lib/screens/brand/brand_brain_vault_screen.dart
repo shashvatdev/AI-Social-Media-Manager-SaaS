@@ -4,6 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/network/api_client.dart';
+import '../../core/network/api_endpoints.dart';
 import '../../providers/brand_provider.dart';
 import '../../widgets/glowing_button.dart';
 import '../../widgets/editorial_badge.dart';
@@ -17,10 +19,15 @@ class BrandBrainVaultScreen extends StatefulWidget {
 
 class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
   final _urlScrapeController = TextEditingController();
+  final _queryController = TextEditingController();
+  bool _isQuerying = false;
+  String? _ragAnswer;
+  List<String> _ragSources = [];
 
   @override
   void dispose() {
     _urlScrapeController.dispose();
+    _queryController.dispose();
     super.dispose();
   }
 
@@ -69,6 +76,36 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
           content: Text('Website scraped & synthesized into brand memory!'),
           backgroundColor: AppColors.emeraldSuccess,
         ),
+      );
+    }
+  }
+
+  Future<void> _handleBrainQuery(String brandId) async {
+    final question = _queryController.text.trim();
+    if (question.isEmpty) return;
+
+    setState(() {
+      _isQuerying = true;
+      _ragAnswer = null;
+      _ragSources = [];
+    });
+
+    try {
+      final response = await ApiClient.dio.post(
+        ApiEndpoints.queryBrain(brandId),
+        data: {'question': question},
+      );
+      if (!mounted) return;
+      setState(() {
+        _ragAnswer = response.data['answer'];
+        _ragSources = List<String>.from(response.data['cited_sources'] ?? []);
+        _isQuerying = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isQuerying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('RAG Query failed: $e'), backgroundColor: AppColors.crimsonReject),
       );
     }
   }
@@ -238,6 +275,132 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
               ),
             ).animate().fadeIn(delay: 200.ms),
 
+            const SizedBox(height: 20),
+
+            // Card 3: Interactive RAG Query Explorer ("Ask Your Brand Brain")
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAubergine,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.marigold.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.deepAubergine,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.psychology_alt_rounded, color: AppColors.marigold, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Ask Your Brand Brain', style: AppTextStyles.headlineSans),
+                            Text('Test AI grounded memory using your ingested facts', style: AppTextStyles.labelCaption),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Prompt Suggestions Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildQueryChip('Our Key Differentiators', activeBrand.id),
+                        const SizedBox(width: 8),
+                        _buildQueryChip('Target Audience & ICPs', activeBrand.id),
+                        const SizedBox(width: 8),
+                        _buildQueryChip('Core Value Proposition', activeBrand.id),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  TextField(
+                    controller: _queryController,
+                    style: AppTextStyles.bodyBold,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. What are our 3 biggest differentiators?',
+                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textTertiary),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.arrow_forward_rounded, color: AppColors.marigold),
+                        onPressed: () => _handleBrainQuery(activeBrand.id),
+                      ),
+                    ),
+                    onSubmitted: (_) => _handleBrainQuery(activeBrand.id),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: GlowingButton(
+                      text: 'Synthesize from Brand Memory',
+                      isLoading: _isQuerying,
+                      onPressed: () => _handleBrainQuery(activeBrand.id),
+                      icon: Icons.auto_awesome,
+                    ),
+                  ),
+
+                  if (_ragAnswer != null) ...[
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkCanvas,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.borderAubergine),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.verified_rounded, color: AppColors.marigold, size: 16),
+                              const SizedBox(width: 8),
+                              Text('GROUNDED RAG SYNTHESIS', style: AppTextStyles.badgeText.copyWith(color: AppColors.marigold)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          SelectableText(
+                            _ragAnswer!,
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary, height: 1.5),
+                          ),
+                          if (_ragSources.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            const Divider(color: AppColors.borderAubergine, height: 1),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: _ragSources.map((s) => EditorialBadge(
+                                label: s,
+                                backgroundColor: AppColors.surfaceAubergine,
+                                textColor: AppColors.iceSilver,
+                                icon: Icons.source_rounded,
+                              )).toList(),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
             const SizedBox(height: 32),
 
             // Section 3: Ingested Knowledge Vault
@@ -336,6 +499,18 @@ class _BrandBrainVaultScreenState extends State<BrandBrainVaultScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQueryChip(String text, String brandId) {
+    return ActionChip(
+      label: Text(text, style: AppTextStyles.badgeText.copyWith(color: AppColors.iceSilver)),
+      backgroundColor: AppColors.surfaceAubergine,
+      side: const BorderSide(color: AppColors.borderAubergine),
+      onPressed: () {
+        _queryController.text = text;
+        _handleBrainQuery(brandId);
+      },
     );
   }
 }

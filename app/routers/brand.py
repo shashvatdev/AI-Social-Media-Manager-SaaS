@@ -12,6 +12,7 @@ from app.schemas.strategy import StrategyUpdateRequest, StrategyResponse
 from app.services.scraper import ScraperService
 from app.services.doc_parser import DocumentParserService
 from app.services.ai_engine import AIEngineService
+from pydantic import BaseModel
 from typing import List, Optional
 
 router = APIRouter(prefix="/api/brands", tags=["Brands & Content Strategy"])
@@ -175,6 +176,41 @@ def get_brand_knowledge(brand_id: str, db: Session = Depends(get_db)):
         )
         for item in items
     ]
+
+class BrainQueryRequest(BaseModel):
+    question: str
+
+class BrainQueryResponse(BaseModel):
+    brand_id: str
+    question: str
+    answer: str
+    cited_sources: List[str]
+
+@router.post("/{brand_id}/brain/query", response_model=BrainQueryResponse)
+def query_brand_brain(brand_id: str, req: BrainQueryRequest, db: Session = Depends(get_db)):
+    """
+    RAG Grounding Endpoint: Queries the Brand Brain memory and uses Groq LLM
+    to synthesize a strictly fact-based response citing ingested documents & scraped web pages.
+    """
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    items = db.query(BrandKnowledge).filter(BrandKnowledge.brand_id == brand_id).all()
+    knowledge_list = [{"title": k.title, "content": k.content} for k in items]
+
+    result = AIEngineService.query_knowledge_base(
+        brand_name=brand.name,
+        question=req.question.strip(),
+        knowledge_items=knowledge_list
+    )
+
+    return BrainQueryResponse(
+        brand_id=brand.id,
+        question=req.question,
+        answer=result.get("answer", "No response could be generated."),
+        cited_sources=result.get("cited_sources", [])
+    )
 
 # ----------------- 4. AI CONTENT LEAD STRATEGY BLUEPRINT -----------------
 
