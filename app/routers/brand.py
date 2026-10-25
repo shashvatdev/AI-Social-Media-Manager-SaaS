@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.dependencies import get_optional_user
+from app.models.user import User
 from app.models.brand import Brand
 from app.models.knowledge import BrandKnowledge
 from app.models.strategy import BrandStrategy
@@ -10,16 +12,21 @@ from app.schemas.strategy import StrategyUpdateRequest, StrategyResponse
 from app.services.scraper import ScraperService
 from app.services.doc_parser import DocumentParserService
 from app.services.ai_engine import AIEngineService
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/api/brands", tags=["Brands & Content Strategy"])
 
 @router.post("", response_model=BrandResponse, status_code=status.HTTP_201_CREATED)
-def create_brand(brand_data: BrandCreate, db: Session = Depends(get_db)):
+def create_brand(
+    brand_data: BrandCreate,
+    current_user: Optional[User] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
     """
-    Step 1: Create a brand profile.
+    Step 1: Create a brand profile. Binds to logged-in user if authenticated.
     """
     new_brand = Brand(
+        user_id=current_user.id if current_user else None,
         name=brand_data.name,
         website_url=brand_data.website_url,
         industry=brand_data.industry,
@@ -34,6 +41,19 @@ def create_brand(brand_data: BrandCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_brand)
     return new_brand
+
+@router.get("", response_model=List[BrandResponse])
+def list_brands(
+    current_user: Optional[User] = Depends(get_optional_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all brands. If user is authenticated, returns user's brands.
+    """
+    query = db.query(Brand)
+    if current_user:
+        query = query.filter(Brand.user_id == current_user.id)
+    return query.order_by(Brand.created_at.desc()).all()
 
 @router.get("/{brand_id}", response_model=BrandResponse)
 def get_brand(brand_id: str, db: Session = Depends(get_db)):

@@ -15,6 +15,7 @@ class BrandCreate(BaseModel):
 
 class BrandResponse(BaseModel):
     id: str
+    user_id: Optional[str] = None
     name: str
     website_url: Optional[str] = None
     industry: Optional[str] = None
