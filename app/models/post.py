@@ -25,12 +25,19 @@ class Post(Base):
     # Generated copy & media
     content = Column(Text, nullable=False)
     hashtags = Column(JSON, default=list)       # ["#AI", "#SaaS"]
-    media_urls = Column(JSON, default=list)     # Image/Video URLs if any
-    suggested_media_prompt = Column(Text, nullable=True)  # DALL-E / Flux prompt
+    media_urls = Column(JSON, default=list)     # [url1, url2]
+    suggested_media_prompt = Column(Text, nullable=True)  # Prompt used for creative generator
+
+    # Strategic Metadata (AI Content Lead Layer)
+    pillar = Column(String, nullable=True)
+    funnel_stage = Column(String, nullable=True)  # AWARENESS, AUTHORITY, CONVERSION
+    hook_angle = Column(String, nullable=True)
+    quality_score = Column(String, nullable=True) # e.g. "9.2/10"
+    critic_notes = Column(Text, nullable=True)    # Feedback from AI quality critic
 
     # Status & Review Flow
     status = Column(String, default=PostStatus.PENDING_APPROVAL, nullable=False, index=True)
-    ai_reasoning = Column(Text, nullable=True)   # Why AI chose this theme/angle
+    ai_reasoning = Column(Text, nullable=True)   # Strategic reasoning
     user_feedback = Column(Text, nullable=True)  # User comments during revision
     rejection_reason = Column(Text, nullable=True)
 

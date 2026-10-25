@@ -7,6 +7,7 @@ class PostGenerateRequest(BaseModel):
     platform: str  # LINKEDIN, TWITTER, INSTAGRAM, FACEBOOK
     topic: Optional[str] = None
     count: Optional[int] = 3
+    generate_creatives: Optional[bool] = True  # Automatically generates Flux visual
 
 class PostApproveRequest(BaseModel):
     scheduled_for: Optional[datetime] = None  # If omitted, ready for immediate dispatch
@@ -15,11 +16,12 @@ class PostRejectRequest(BaseModel):
     reason: Optional[str] = "Not aligned with current goals"
 
 class PostChangeRequest(BaseModel):
-    feedback: str  # e.g., "Make it shorter and more witty"
+    feedback: str  # e.g., "Make the hook punchier and emphasize the 40% metric"
 
 class PostEditRequest(BaseModel):
     content: str
     hashtags: Optional[List[str]] = None
+    media_urls: Optional[List[str]] = None
 
 class PostResponse(BaseModel):
     id: str
@@ -30,6 +32,14 @@ class PostResponse(BaseModel):
     hashtags: List[str] = []
     media_urls: List[str] = []
     suggested_media_prompt: Optional[str] = None
+    
+    # Strategy & Critic Layer
+    pillar: Optional[str] = None
+    funnel_stage: Optional[str] = None
+    hook_angle: Optional[str] = None
+    quality_score: Optional[str] = None
+    critic_notes: Optional[str] = None
+
     status: str
     ai_reasoning: Optional[str] = None
     user_feedback: Optional[str] = None

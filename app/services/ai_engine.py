@@ -1,104 +1,244 @@
 import os
 import json
-import httpx
+import re
 from typing import Dict, Any, List, Optional
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GROQ_MODEL = "qwen/qwen3.8-27b"
+
+PLATFORM_PLAYBOOKS = {
+    "LINKEDIN": """
+LINKEDIN VIRAL & AUTHORITY FORMULA:
+- Hook (Line 1-2): Scroll-stopping opener before the 'see more' cut. Must trigger curiosity, challenge common wisdom, or present a staggering metric.
+- Structure: Short, punchy paragraphs (1-2 sentences maximum). Aggressive line breaks for readability on mobile.
+- Body: Actionable breakdown, framework, or real-world case study. Deliver immediate utility.
+- Formatting: Bullet points or numbered lists where applicable.
+- Call to Action (CTA): Clear, frictionless closing question that invites authentic professional debate in the comments.
+- Hashtags: 3-4 targeted, industry-specific hashtags at the very bottom.
+- Style: Professional, sharp, authoritative. No corporate buzzword soup.
+""",
+    "INSTAGRAM": """
+INSTAGRAM HIGH-ENGAGEMENT CAPTION FORMULA:
+- Hook (Line 1): High-impact opening headline with an emoji to grab visual attention.
+- Body: Conversational narrative, quick tips, or micro-story. Use aesthetic spacing.
+- Engagement Trigger: Ask a direct question ("Save this for later" or "Drop a 🔥 if you agree").
+- Hashtags: 8-12 niche-targeted hashtags placed at the bottom.
+- Style: Aesthetic, inspiring, human, authentic.
+""",
+    "TWITTER": """
+TWITTER / X ENGAGEMENT FORMULA:
+- Hook: Bold contrarian claim or striking framework under 270 characters.
+- Tone: High-signal, zero fluff.
+- Max 2 hashtags.
+"""
+}
 
 class AIEngineService:
+    @staticmethod
+    def _get_client() -> Groq:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY is not configured in .env")
+        return Groq(api_key=api_key)
+
+    @staticmethod
+    def _clean_json_response(raw_text: str) -> Dict[str, Any]:
+        """Strips markdown code blocks and safely parses JSON."""
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw_text.strip(), flags=re.MULTILINE)
+        cleaned = re.sub(r"\s*```$", "", cleaned.strip(), flags=re.MULTILINE)
+        
+        # Extract first { to last }
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group(0)
+
+        try:
+            return json.loads(cleaned, strict=False)
+        except json.JSONDecodeError:
+            # Handle potential unescaped double quotes inside values or missing closures
+            for fix in ["}", "\"]}", "\"}]}", "\"}]}}"]:
+                try:
+                    return json.loads(cleaned + fix, strict=False)
+                except Exception:
+                    continue
+            raise
+
+    @staticmethod
+    def generate_brand_strategy(
+        brand_name: str,
+        website_url: Optional[str] = None,
+        industry: Optional[str] = None,
+        initial_tone: Optional[str] = None,
+        initial_audience: Optional[str] = None,
+        knowledge_snippets: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        AI Content Lead Blueprint: Analyzes all ingested brand facts and generates a full 360-degree
+        content strategy, ICP breakdown, pillar allocation, and platform playbooks.
+        """
+        client = AIEngineService._get_client()
+        context_corpus = "\n\n".join(knowledge_snippets[:6]) if knowledge_snippets else "No raw docs uploaded yet."
+
+        prompt = f"""You are the Chief Social Media Strategist for "{brand_name}".
+Analyze the brand details and formulate a crisp, high-impact 30-Day Brand Social Media Strategy Blueprint.
+
+BRAND DETAILS:
+- Website: {website_url or 'N/A'}
+- Industry: {industry or 'High-Growth Tech/Business'}
+- Tone: {initial_tone or 'Authoritative, innovative, high-signal'}
+- Audience: {initial_audience or 'Decision-makers and target customers'}
+
+BRAND KNOWLEDGE BASE:
+{context_corpus}
+
+Return STRICTLY valid JSON with no conversational text:
+{{
+  "positioning_statement": "Sharp 2-sentence market positioning and unique unfair advantage.",
+  "target_personas": [
+    {{
+      "name": "Primary ICP (e.g. The Overwhelmed VP of Engineering)",
+      "job_title": "Primary titles",
+      "pain_points": ["Top pain point 1", "Top pain point 2"],
+      "core_desires": ["Primary goal 1", "Primary goal 2"],
+      "objections": ["Key skepticism"]
+    }}
+  ],
+  "tone_guidelines": {{
+    "voice_traits": ["Direct", "Data-backed", "Pragmatic"],
+    "do_rules": ["Use specific numbers and frameworks", "Lead with strong hooks"],
+    "dont_rules": ["No generic motivational quotes", "No corporate buzzwords"],
+    "banned_cliches": ["In today's fast-paced world", "Game changer", "Synergy", "Unlock potential"]
+  }},
+  "content_pillars": [
+    {{
+      "name": "Deconstructions & Industry Data",
+      "target_percentage": 40,
+      "focus_theme": "High-signal technical/business breakdowns",
+      "example_angles": ["Angle 1", "Angle 2"]
+    }},
+    {{
+      "name": "Actionable How-To Frameworks",
+      "target_percentage": 35,
+      "focus_theme": "Immediately usable workflow playbooks",
+      "example_angles": ["Angle 1", "Angle 2"]
+    }},
+    {{
+      "name": "Social Proof & Metrics",
+      "target_percentage": 25,
+      "focus_theme": "Real case studies and cost/time savings",
+      "example_angles": ["Angle 1"]
+    }}
+  ],
+  "funnel_mix": {{
+    "awareness_percentage": 40,
+    "authority_percentage": 35,
+    "conversion_percentage": 25
+  }},
+  "platform_playbooks": {{
+    "linkedin": "Authoritative thought leadership, strong 2-line hooks, structured takeaways, clear CTA",
+    "instagram": "Visual frameworks, aesthetic carousels, concise actionable captions"
+  }},
+  "weekly_cadence": {{
+    "recommended_posts_per_week": 4,
+    "best_posting_days": ["Tuesday", "Wednesday", "Thursday"],
+    "optimal_time_windows": ["08:30 AM - 10:00 AM", "04:30 PM - 06:00 PM"]
+  }}
+}}
+"""
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=900
+        )
+        return AIEngineService._clean_json_response(response.choices[0].message.content)
+
     @staticmethod
     def generate_posts(
         brand_name: str,
         platform: str,
+        strategy: Optional[Dict[str, Any]] = None,
         tone: Optional[str] = None,
         target_audience: Optional[str] = None,
         content_pillars: Optional[List[str]] = None,
         banned_words: Optional[List[str]] = None,
         knowledge_snippets: Optional[List[str]] = None,
         topic: Optional[str] = None,
-        count: int = 3
+        count: int = 1
     ) -> List[Dict[str, Any]]:
         """
-        Generates platform-tailored social media posts using brand guidelines and knowledge base.
+        Generates brand-tailored posts governed by the strategic plan and brand knowledge.
+        Applies a quality critic review score to every post.
         """
-        api_key = os.getenv("OPENAI_API_KEY", "")
+        client = AIEngineService._get_client()
+        platform_clean = platform.upper().strip()
+        playbook = PLATFORM_PLAYBOOKS.get(platform_clean, PLATFORM_PLAYBOOKS["LINKEDIN"])
 
-        # Fallback high-quality template generator if no API key is supplied yet
-        if not api_key:
-            return AIEngineService._generate_smart_fallback(
-                brand_name=brand_name,
-                platform=platform,
-                tone=tone,
-                content_pillars=content_pillars,
-                topic=topic,
-                count=count
-            )
+        strategy_context = ""
+        if strategy:
+            strategy_context = f"""
+APPROVED BRAND STRATEGY:
+- Positioning: {strategy.get('positioning_statement', '')}
+- Target Personas: {json.dumps(strategy.get('target_personas', []))}
+- Tone Guidelines: {json.dumps(strategy.get('tone_guidelines', {}))}
+- Pillars: {json.dumps(strategy.get('content_pillars', []))}
+- Funnel Mix: {json.dumps(strategy.get('funnel_mix', {}))}
+"""
 
-        # Real OpenAI Call
-        pillars_str = ", ".join(content_pillars) if content_pillars else "Industry Insights, Value Tips"
-        banned_str = ", ".join(banned_words) if banned_words else "None"
-        context_str = "\n".join(knowledge_snippets[:3]) if knowledge_snippets else "Innovative brand in its domain."
+        knowledge_str = "\n\n".join(knowledge_snippets[:5]) if knowledge_snippets else "No extra documents."
 
-        platform_rules = {
-            "LINKEDIN": "Use an engaging 2-line hook before 'see more'. Professional storytelling format with clean line breaks. Include 1 key actionable takeaway and a CTA. 3-4 hashtags.",
-            "TWITTER": "Punchy and conversational under 270 characters. Bold first sentence. 1-2 focused hashtags.",
-            "INSTAGRAM": "Visually appealing caption with tasteful emojis to break text. Engaging question to spark comments in the community. 10-12 targeted hashtags.",
-            "FACEBOOK": "Community-focused, relatable and value-driven with an invitation to discuss."
-        }.get(platform.upper(), "Engaging and brand-aligned social post.")
+        system_prompt = f"""You are the Lead Content Creator & Copywriter for "{brand_name}".
+Write {count} viral-grade, high-converting {platform_clean} post.
 
-        system_prompt = f"""You are the Lead Social Media Strategist for {brand_name}.
-Tone of Voice: {tone or 'Authoritative yet accessible'}
-Target Audience: {target_audience or 'Target customers and professionals'}
-Content Pillars: {pillars_str}
-NEVER USE THESE BANNED WORDS: {banned_str}
+{strategy_context}
 
-Platform Formatting Rules for {platform}:
-{platform_rules}
+RAW BRAND FACTS (incorporate real metrics and facts from here):
+{knowledge_str}
 
-Brand Background & Knowledge Base:
-{context_str}
+{playbook}
 
-Output strictly valid JSON with this schema:
+RULES:
+1. Every post MUST have an arresting 2-line hook that creates an irresistible urge to read more.
+2. Zero fluff, zero generic clichés (never say 'In today's fast-paced world', 'Game changer', 'Dive in').
+3. Provide a creative image generation prompt for a matching modern high-res graphic.
+4. Return valid JSON only. Properly escape newlines inside the content string as \n.
+
+Return STRICTLY valid JSON with no preamble:
 {{
   "posts": [
     {{
-      "content": "formatted post text",
-      "hashtags": ["#tag1", "#tag2"],
-      "ai_reasoning": "Explain in 1 sentence why this angle works for the brand's audience",
-      "suggested_media_prompt": "Prompt for image/creative generator"
+      "content": "formatted post text with spacing, hooks, value points, and CTA",
+      "hashtags": ["#tag1", "#tag2", "#tag3"],
+      "pillar": "Specific content pillar name",
+      "funnel_stage": "AWARENESS or AUTHORITY or CONVERSION",
+      "hook_angle": "Description of the hook psychology used",
+      "ai_reasoning": "Why this specific topic and angle resonates with the target audience",
+      "suggested_media_prompt": "Ultra-detailed visual prompt for 3D/editorial image generator",
+      "quality_score": "Score out of 10, e.g. 9.4/10",
+      "critic_notes": "Critique on why hook and value delivery meets top-tier standards"
     }}
   ]
-}}"""
+}}
+"""
+        user_prompt = (
+            f"Generate {count} distinct {platform_clean} post"
+            + (f" focused on: '{topic}'" if topic else " cycling through the strategic pillars.")
+        )
 
-        user_prompt = f"Generate {count} unique {platform} posts" + (f" focused on the topic: '{topic}'" if topic else " cycling through the brand's pillars.")
-
-        try:
-            with httpx.Client(timeout=30.0) as client:
-                res = client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    json={
-                        "model": "gpt-4o-mini",
-                        "response_format": {"type": "json_object"},
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        "temperature": 0.75
-                    }
-                )
-                data = res.json()
-                raw_content = data["choices"][0]["message"]["content"]
-                parsed = json.loads(raw_content)
-                return parsed.get("posts", [])
-        except Exception as e:
-            # Fallback on network or API failure
-            return AIEngineService._generate_smart_fallback(
-                brand_name=brand_name,
-                platform=platform,
-                tone=tone,
-                content_pillars=content_pillars,
-                topic=topic,
-                count=count
-            )
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.75,
+            max_tokens=800
+        )
+        parsed = AIEngineService._clean_json_response(response.choices[0].message.content)
+        return parsed.get("posts", [])
 
     @staticmethod
     def refine_post(
@@ -108,66 +248,25 @@ Output strictly valid JSON with this schema:
         platform: str
     ) -> str:
         """
-        Rewrites an existing post based on user feedback.
+        Rewrites post incorporating specific human feedback while preserving voice and structure.
         """
-        api_key = os.getenv("OPENAI_API_KEY", "")
-        if not api_key:
-            return f"{original_content}\n\n[Revised based on feedback: '{user_feedback}']"
+        client = AIEngineService._get_client()
+        prompt = f"""You are the Senior Editor for "{brand_name}".
+Rewrite this {platform} post strictly incorporating the user's revision notes.
+Elevate the hook, sharpen the value, and follow platform formatting.
 
-        try:
-            with httpx.Client(timeout=30.0) as client:
-                res = client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    json={
-                        "model": "gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": f"You are a copywriter for {brand_name}. Rewrite the given {platform} post strictly addressing the user's feedback. Return ONLY the new post text."},
-                            {"role": "user", "content": f"Original Post:\n{original_content}\n\nFeedback:\n{user_feedback}"}
-                        ],
-                        "temperature": 0.7
-                    }
-                )
-                data = res.json()
-                return data["choices"][0]["message"]["content"].strip()
-        except Exception:
-            return f"{original_content}\n\n(Updated to reflect: {user_feedback})"
+ORIGINAL POST:
+{original_content}
 
-    @staticmethod
-    def _generate_smart_fallback(
-        brand_name: str,
-        platform: str,
-        tone: Optional[str],
-        content_pillars: Optional[List[str]],
-        topic: Optional[str],
-        count: int
-    ) -> List[Dict[str, Any]]:
-        pillar = content_pillars[0] if content_pillars else (topic or "Growth & Efficiency")
-        results = []
+USER REVISION NOTES:
+{user_feedback}
 
-        if platform.upper() == "LINKEDIN":
-            for i in range(count):
-                results.append({
-                    "content": f"Most companies overlook this one simple reality:\n\nSuccess in {pillar} isn't about working harder—it's about building smarter workflows.\n\nAt {brand_name}, we analyzed why leading teams consistently outperform the rest:\n\n1. Clear intent beats messy execution.\n2. Fast feedback loops create unfair advantages.\n3. Automation frees up high-leverage creative work.\n\nWhat's the biggest bottleneck holding your team back right now?\n\nDrop your thoughts below 👇",
-                    "hashtags": [f"#{brand_name.replace(' ', '')}", f"#{pillar.replace(' ', '')}", "#Productivity", "#B2B"],
-                    "ai_reasoning": f"Focused on {pillar} with a thought-leadership hook tailored for professional LinkedIn audiences.",
-                    "suggested_media_prompt": f"Minimalist, modern editorial graphic representing {pillar} in high-tech corporate style"
-                })
-        elif platform.upper() == "TWITTER":
-            for i in range(count):
-                results.append({
-                    "content": f"The biggest mistake people make with {pillar}?\n\nTrying to solve with brute force what could be solved with a better system.\n\nSimplicity scales. Complexity fails.",
-                    "hashtags": [f"#{pillar.replace(' ', '')}", "#BuildInPublic"],
-                    "ai_reasoning": f"Short, punchy contrarian insight designed for high retweets on Twitter/X.",
-                    "suggested_media_prompt": "Clean infographic visual contrasting complexity vs simplicity"
-                })
-        else:
-            for i in range(count):
-                results.append({
-                    "content": f"Redefining how we look at {pillar} ✨\n\nBehind every successful breakthrough is a commitment to doing the fundamentals right every single day.\n\nTell us in the comments: what is your #1 goal this month?",
-                    "hashtags": [f"#{brand_name.replace(' ', '')}", f"#{pillar.replace(' ', '')}", "#DailyInspiration"],
-                    "ai_reasoning": "Community-first caption with visual prompts for Instagram feed.",
-                    "suggested_media_prompt": "High-contrast aesthetic photography representing modern brand lifestyle"
-                })
-
-        return results[:count]
+Output ONLY the rewritten post text. Do not add conversational intro or outro.
+"""
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=800
+        )
+        return response.choices[0].message.content.strip()

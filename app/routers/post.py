@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.brand import Brand
 from app.models.knowledge import BrandKnowledge
+from app.models.strategy import BrandStrategy
 from app.models.social_account import SocialAccount
 from app.models.post import Post, PostStatus
 from app.schemas.post import (
@@ -14,6 +15,7 @@ from app.schemas.post import (
     PostResponse
 )
 from app.services.ai_engine import AIEngineService
+from app.services.image_generator import ImageGeneratorService
 from app.services.publisher import SocialPublisherService
 from typing import List, Optional
 from datetime import datetime
@@ -44,32 +46,64 @@ def generate_posts(req: PostGenerateRequest, db: Session = Depends(get_db)):
 
     # Fetch brand knowledge snippets
     knowledge_entries = db.query(BrandKnowledge).filter(BrandKnowledge.brand_id == brand.id).all()
-    knowledge_snippets = [k.summary or k.content[:300] for k in knowledge_entries]
+    knowledge_snippets = [k.summary or k.content[:350] for k in knowledge_entries]
+
+    # Fetch approved brand strategy if exists
+    strategy_record = db.query(BrandStrategy).filter(BrandStrategy.brand_id == brand.id).first()
+    strategy_dict = None
+    if strategy_record:
+        strategy_dict = {
+            "positioning_statement": strategy_record.positioning_statement,
+            "target_personas": strategy_record.target_personas,
+            "tone_guidelines": strategy_record.tone_guidelines,
+            "content_pillars": strategy_record.content_pillars,
+            "funnel_mix": strategy_record.funnel_mix,
+            "platform_playbooks": strategy_record.platform_playbooks
+        }
 
     # Generate posts via AI Engine
     generated_items = AIEngineService.generate_posts(
         brand_name=brand.name,
         platform=platform_clean,
+        strategy=strategy_dict,
         tone=brand.tone_of_voice,
         target_audience=brand.target_audience,
         content_pillars=brand.content_pillars or [],
         banned_words=brand.banned_words or [],
         knowledge_snippets=knowledge_snippets,
         topic=req.topic,
-        count=req.count or 3
+        count=req.count or 1
     )
 
     created_posts = []
     for item in generated_items:
+        # Generate real visual creative URL if requested
+        media_urls = []
+        if req.generate_creatives and item.get("suggested_media_prompt"):
+            image_url = ImageGeneratorService.generate_image_url(
+                item["suggested_media_prompt"],
+                brand.name
+            )
+            media_urls.append(image_url)
+
         post = Post(
             brand_id=brand.id,
             social_account_id=social_acc.id if social_acc else None,
             platform=platform_clean,
             content=item["content"],
             hashtags=item.get("hashtags", []),
-            ai_reasoning=item.get("ai_reasoning"),
+            media_urls=media_urls,
             suggested_media_prompt=item.get("suggested_media_prompt"),
-            status=PostStatus.PENDING_APPROVAL  # Must be approved by human
+            
+            # Content Lead & Strategy Layer
+            pillar=item.get("pillar"),
+            funnel_stage=item.get("funnel_stage"),
+            hook_angle=item.get("hook_angle"),
+            quality_score=item.get("quality_score"),
+            critic_notes=item.get("critic_notes"),
+            
+            status=PostStatus.PENDING_APPROVAL,  # Must be approved by human
+            ai_reasoning=item.get("ai_reasoning")
         )
         db.add(post)
         created_posts.append(post)
@@ -167,6 +201,8 @@ def edit_post_content(post_id: str, req: PostEditRequest, db: Session = Depends(
     post.content = req.content
     if req.hashtags is not None:
         post.hashtags = req.hashtags
+    if req.media_urls is not None:
+        post.media_urls = req.media_urls
 
     db.commit()
     db.refresh(post)

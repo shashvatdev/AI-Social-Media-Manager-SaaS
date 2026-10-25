@@ -3,13 +3,16 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.brand import Brand
 from app.models.knowledge import BrandKnowledge
+from app.models.strategy import BrandStrategy
 from app.schemas.brand import BrandCreate, BrandResponse
 from app.schemas.knowledge import ScrapeRequest, ScrapeResponse, KnowledgeItemResponse
+from app.schemas.strategy import StrategyUpdateRequest, StrategyResponse
 from app.services.scraper import ScraperService
 from app.services.doc_parser import DocumentParserService
+from app.services.ai_engine import AIEngineService
 from typing import List
 
-router = APIRouter(prefix="/api/brands", tags=["Brands"])
+router = APIRouter(prefix="/api/brands", tags=["Brands & Content Strategy"])
 
 @router.post("", response_model=BrandResponse, status_code=status.HTTP_201_CREATED)
 def create_brand(brand_data: BrandCreate, db: Session = Depends(get_db)):
@@ -152,3 +155,97 @@ def get_brand_knowledge(brand_id: str, db: Session = Depends(get_db)):
         )
         for item in items
     ]
+
+# ----------------- 4. AI CONTENT LEAD STRATEGY BLUEPRINT -----------------
+
+@router.post("/{brand_id}/strategy/generate", response_model=StrategyResponse)
+def generate_strategy(brand_id: str, db: Session = Depends(get_db)):
+    """
+    AI Content Lead Engine: Synthesizes scraped website and uploaded docs to formulate
+    a complete 30-day Brand Social Media Strategy Blueprint.
+    """
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    knowledge_items = db.query(BrandKnowledge).filter(BrandKnowledge.brand_id == brand_id).all()
+    snippets = [k.summary or k.content[:400] for k in knowledge_items]
+
+    blueprint = AIEngineService.generate_brand_strategy(
+        brand_name=brand.name,
+        website_url=brand.website_url,
+        industry=brand.industry,
+        initial_tone=brand.tone_of_voice,
+        initial_audience=brand.target_audience,
+        knowledge_snippets=snippets
+    )
+
+    # Upsert strategy record
+    existing = db.query(BrandStrategy).filter(BrandStrategy.brand_id == brand_id).first()
+    if existing:
+        existing.positioning_statement = blueprint.get("positioning_statement", "")
+        existing.target_personas = blueprint.get("target_personas", [])
+        existing.tone_guidelines = blueprint.get("tone_guidelines", {})
+        existing.content_pillars = blueprint.get("content_pillars", [])
+        existing.funnel_mix = blueprint.get("funnel_mix", {})
+        existing.platform_playbooks = blueprint.get("platform_playbooks", {})
+        existing.weekly_cadence = blueprint.get("weekly_cadence", {})
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    new_strat = BrandStrategy(
+        brand_id=brand_id,
+        positioning_statement=blueprint.get("positioning_statement", ""),
+        target_personas=blueprint.get("target_personas", []),
+        tone_guidelines=blueprint.get("tone_guidelines", {}),
+        content_pillars=blueprint.get("content_pillars", []),
+        funnel_mix=blueprint.get("funnel_mix", {}),
+        platform_playbooks=blueprint.get("platform_playbooks", {}),
+        weekly_cadence=blueprint.get("weekly_cadence", {}),
+        is_approved=False
+    )
+    db.add(new_strat)
+    db.commit()
+    db.refresh(new_strat)
+    return new_strat
+
+@router.get("/{brand_id}/strategy", response_model=StrategyResponse)
+def get_strategy(brand_id: str, db: Session = Depends(get_db)):
+    """
+    Fetch the strategic blueprint for a brand.
+    """
+    strategy = db.query(BrandStrategy).filter(BrandStrategy.brand_id == brand_id).first()
+    if not strategy:
+        raise HTTPException(status_code=404, detail="No strategy generated yet. Call POST /{brand_id}/strategy/generate first.")
+    return strategy
+
+@router.put("/{brand_id}/strategy", response_model=StrategyResponse)
+def update_strategy(brand_id: str, req: StrategyUpdateRequest, db: Session = Depends(get_db)):
+    """
+    Human Review & Approval: Allows the user to edit or approve the AI Content Lead's strategy.
+    """
+    strategy = db.query(BrandStrategy).filter(BrandStrategy.brand_id == brand_id).first()
+    if not strategy:
+        raise HTTPException(status_code=404, detail="Strategy not found")
+
+    if req.positioning_statement is not None:
+        strategy.positioning_statement = req.positioning_statement
+    if req.target_personas is not None:
+        strategy.target_personas = req.target_personas
+    if req.tone_guidelines is not None:
+        strategy.tone_guidelines = req.tone_guidelines
+    if req.content_pillars is not None:
+        strategy.content_pillars = req.content_pillars
+    if req.funnel_mix is not None:
+        strategy.funnel_mix = req.funnel_mix
+    if req.platform_playbooks is not None:
+        strategy.platform_playbooks = req.platform_playbooks
+    if req.weekly_cadence is not None:
+        strategy.weekly_cadence = req.weekly_cadence
+    if req.is_approved is not None:
+        strategy.is_approved = req.is_approved
+
+    db.commit()
+    db.refresh(strategy)
+    return strategy
